@@ -1,7 +1,6 @@
 package com.jpmcosta.test.realmtestproject.adapter;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,8 +14,6 @@ import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.RealmResults;
 
 public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemHolder> {
-
-    private static String LOG_TAG = ItemListAdapter.class.getSimpleName();
 
     private OnItemClickListener mOnItemClickListener;
 
@@ -34,29 +31,22 @@ public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemHo
                     return;
                 }
 
-                Log.i(LOG_TAG, "start log ------------------------------------");
-
                 // For deletions, the adapter has to be notified in reverse order.
                 OrderedCollectionChangeSet.Range[] deletions = changeSet.getDeletionRanges();
                 for (int i = deletions.length - 1; i >= 0; i--) {
                     OrderedCollectionChangeSet.Range range = deletions[i];
-                    Log.i(LOG_TAG, "deletion: " + range.startIndex + ", " + range.length);
                     notifyItemRangeRemoved(range.startIndex, range.length);
                 }
 
                 OrderedCollectionChangeSet.Range[] insertions = changeSet.getInsertionRanges();
                 for (OrderedCollectionChangeSet.Range range : insertions) {
-                    Log.i(LOG_TAG, "insertion: " + range.startIndex + ", " + range.length);
                     notifyItemRangeInserted(range.startIndex, range.length);
                 }
 
                 OrderedCollectionChangeSet.Range[] changes = changeSet.getChangeRanges();
                 for (OrderedCollectionChangeSet.Range range : changes) {
-                    Log.i(LOG_TAG, "change: " + range.startIndex + ", " + range.length);
                     notifyItemRangeChanged(range.startIndex, range.length);
                 }
-
-                Log.i(LOG_TAG, "stop log ------------------------------------");
             }
         });
     }
