@@ -8,16 +8,13 @@ public class Item extends RealmObject {
     public static Item create(Long id) {
         Item item = new Item();
         item.id = id;
-        item.name = "Item " + id;
         return item;
     }
 
     @PrimaryKey
     public Long id;
 
-    public String name;
-
-    public boolean isBookmarked = true;
+    public App app;
 
     public Feed parentFeed;
 }

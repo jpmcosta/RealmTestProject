@@ -17,10 +17,4 @@ public class Feed extends RealmObject {
     public Long id;
 
     public RealmList<Item> items;
-
-
-    public void addItem(Item item) {
-        items.add(item);
-        item.parentFeed = this;
-    }
 }
