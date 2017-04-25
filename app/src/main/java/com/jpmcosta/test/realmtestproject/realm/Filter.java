@@ -7,10 +7,10 @@ import io.realm.annotations.PrimaryKey;
 public class Filter extends RealmObject {
 
     public static Filter create(Long id) {
-        Filter feed = new Filter();
-        feed.id = id;
-        feed.apps = new RealmList<>();
-        return feed;
+        Filter filter = new Filter();
+        filter.id = id;
+        filter.apps = new RealmList<>();
+        return filter;
     }
 
     @PrimaryKey
