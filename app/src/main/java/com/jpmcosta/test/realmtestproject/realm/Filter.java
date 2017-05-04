@@ -19,17 +19,4 @@ public class Filter extends RealmObject {
     public RealmList<App> apps;
 
     public boolean isEnabled = false;
-
-
-    public void reset() {
-        isEnabled = false;
-        apps.clear();
-    }
-
-    public void copy(Filter from) {
-        isEnabled = from.isEnabled;
-        for (App app : from.apps) {
-            apps.add(app);
-        }
-    }
 }
