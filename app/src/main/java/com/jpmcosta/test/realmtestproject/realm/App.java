@@ -1,20 +1,22 @@
 package com.jpmcosta.test.realmtestproject.realm;
 
-import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
 public class App extends RealmObject {
 
-    public static App create(Long id) {
+    public static App create(Long id, String name, int color) {
         App app = new App();
+        app.name = name;
         app.id = id;
-        app.feeds = new RealmList<>();
+        app.color = RealmColor.create(color);
         return app;
     }
 
     @PrimaryKey
     public Long id;
 
-    public RealmList<Feed> feeds;
+    public String name;
+
+    public RealmColor color;
 }
