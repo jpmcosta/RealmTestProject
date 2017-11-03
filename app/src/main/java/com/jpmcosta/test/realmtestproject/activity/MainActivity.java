@@ -1,28 +1,25 @@
 package com.jpmcosta.test.realmtestproject.activity;
 
-import android.content.res.ColorStateList;
-import android.graphics.Color;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.jpmcosta.test.realmtestproject.R;
-import com.jpmcosta.test.realmtestproject.adapter.AppListAdapter;
+import com.jpmcosta.test.realmtestproject.adapter.ItemListAdapter;
 import com.jpmcosta.test.realmtestproject.realm.App;
+import com.jpmcosta.test.realmtestproject.realm.Item;
 
 import java.util.Random;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.realm.Realm;
-import io.realm.RealmChangeListener;
-import io.realm.RealmModel;
 
 public class MainActivity extends RealmActivity {
-
-    private static final int[] colors = {Color.RED, Color.GREEN, Color.BLUE, Color.BLACK, Color.YELLOW};
 
     @BindView(android.R.id.list)
     protected RecyclerView mRecyclerView;
@@ -30,47 +27,12 @@ public class MainActivity extends RealmActivity {
     @BindView(R.id.fab)
     protected FloatingActionButton mFab;
 
-    private App mApp;
-
-    private Random mRandom = new Random();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setupRealm();
-
         setupContentView();
-    }
-
-    private void setupRealm() {
-        // Delete all.
-        getRealm().executeTransaction(new Realm.Transaction() {
-
-            @Override
-            public void execute(Realm realm) {
-                realm.deleteAll();
-            }
-        });
-
-        getRealm().executeTransaction(new Realm.Transaction() {
-
-            @Override
-            public void execute(Realm realm) {
-                int color = colors[mRandom.nextInt(colors.length)];
-                realm.copyToRealm(App.create(0L, "My awesome app", color));
-            }
-        });
-
-        mApp = getRealm().where(App.class).findFirst();
-        mApp.addChangeListener(new RealmChangeListener<RealmModel>() {
-
-            @Override
-            public void onChange(RealmModel element) {
-                updateFabColor();
-            }
-        });
     }
 
     private void setupContentView() {
@@ -80,28 +42,10 @@ public class MainActivity extends RealmActivity {
         setupRecyclerView();
 
         setupFab();
-
-        updateFabColor();
     }
 
     private void setupRecyclerView() {
-        AppListAdapter appListAdapter = new AppListAdapter(getRealm().where(App.class).findAll());
-        appListAdapter.setOnAppClickListener(new AppListAdapter.OnAppClickListener() {
-
-            @Override
-            public void onAppClick(final App app) {
-                getRealm().executeTransaction(new Realm.Transaction() {
-
-                    @Override
-                    public void execute(Realm realm) {
-                        app.color.value = colors[mRandom.nextInt(colors.length)];
-                    }
-                });
-            }
-        });
-
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mRecyclerView.setAdapter(appListAdapter);
     }
 
     private void setupFab() {
@@ -109,12 +53,43 @@ public class MainActivity extends RealmActivity {
 
             @Override
             public void onClick(View v) {
-                updateFabColor();
+                startActivity(new Intent(MainActivity.this, CreateActivity.class));
+            }
+        });
+
+        mFab.setOnLongClickListener(new View.OnLongClickListener() {
+
+            @Override
+            public boolean onLongClick(View v) {
+                final App app = getRealm().where(App.class).findFirst();
+
+                getRealm().executeTransaction(new Realm.Transaction() {
+
+                    @Override
+                    public void execute(@NonNull Realm realm) {
+                        Random random = new Random();
+                        final Item item = realm.copyToRealm(Item.create(random.nextInt()));
+                        app.items.add(item);
+                    }
+                });
+                return true;
             }
         });
     }
 
-    private void updateFabColor() {
-        mFab.setBackgroundTintList(ColorStateList.valueOf(mApp.color.value));
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        App app = getRealm().where(App.class).findFirst();
+        ItemListAdapter mAdapter = new ItemListAdapter(app.items);
+        mRecyclerView.setAdapter(mAdapter);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        mRecyclerView.setAdapter(null);
     }
 }
