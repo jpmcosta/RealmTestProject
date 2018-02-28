@@ -1,14 +1,18 @@
 package com.jpmcosta.test.realmtestproject.realm;
 
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
 public class Item extends RealmObject {
 
-    public static Item create(int value) {
+    public static Item create(Long id) {
         Item item = new Item();
-        item.value = value;
+        item.id = id;
         return item;
     }
 
-    public int value;
+    @PrimaryKey
+    public Long id;
+
+    public boolean isBookmarked = false;
 }

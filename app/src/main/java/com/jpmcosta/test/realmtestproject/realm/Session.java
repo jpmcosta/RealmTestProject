@@ -3,10 +3,10 @@ package com.jpmcosta.test.realmtestproject.realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
-public class App extends RealmObject {
+public class Session extends RealmObject {
 
-    public static App create(Long id) {
-        App app = new App();
+    public static Session create(Long id) {
+        Session app = new Session();
         app.id = id;
         return app;
     }
@@ -14,5 +14,5 @@ public class App extends RealmObject {
     @PrimaryKey
     public Long id;
 
-    public int version;
+    public int appVersion;
 }

@@ -2,7 +2,6 @@ package com.jpmcosta.test.realmtestproject.adapter;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,26 +11,23 @@ import com.jpmcosta.test.realmtestproject.R;
 import com.jpmcosta.test.realmtestproject.realm.Item;
 
 import io.realm.RealmChangeListener;
-import io.realm.RealmList;
+import io.realm.RealmResults;
 
 public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemHolder> {
 
-    private static final String LOG_TAG = ItemListAdapter.class.getSimpleName();
-
-    private RealmList<Item> mItems;
-
-    private RealmChangeListener<RealmList<Item>> mItemsChangeListener =
-            new RealmChangeListener<RealmList<Item>>() {
+    public OnItemClickListener mOnItemClickListener;
+    private RealmResults<Item> mItems;
+    private RealmChangeListener<RealmResults<Item>> mItemsChangeListener =
+            new RealmChangeListener<RealmResults<Item>>() {
 
                 @Override
-                public void onChange(@NonNull RealmList<Item> items) {
-                    Log.i(LOG_TAG, "onChange() called " + items.size());
+                public void onChange(@NonNull RealmResults<Item> items) {
                     notifyDataSetChanged();
                 }
             };
 
 
-    public ItemListAdapter(RealmList<Item> items) {
+    public ItemListAdapter(RealmResults<Item> items) {
         mItems = items;
     }
 
@@ -40,14 +36,12 @@ public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemHo
         super.onAttachedToRecyclerView(recyclerView);
 
         mItems.addChangeListener(mItemsChangeListener);
-        Log.i(LOG_TAG, "add listener " + mItems.size());
     }
 
     @Override
     public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
         super.onDetachedFromRecyclerView(recyclerView);
 
-        Log.i(LOG_TAG, "remove listener");
         mItems.removeChangeListener(mItemsChangeListener);
     }
 
@@ -65,23 +59,56 @@ public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemHo
     }
 
     @Override
+    public void onViewRecycled(ItemHolder holder) {
+        super.onViewRecycled(holder);
+        holder.unbind();
+    }
+
+    @Override
     public int getItemCount() {
         return mItems.size();
     }
 
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        mOnItemClickListener = listener;
+    }
+
+
+    public interface OnItemClickListener {
+
+        void onItemClick(Item item);
+    }
 
     public class ItemHolder extends RecyclerView.ViewHolder {
 
+        private Item mItem;
+
+
         public ItemHolder(View itemView) {
             super(itemView);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    if (mOnItemClickListener != null) {
+                        mOnItemClickListener.onItemClick(mItem);
+                    }
+                }
+            });
         }
 
         public void bind(Item item) {
-            onBind(item.value);
+            mItem = item;
+            onBind(item.isBookmarked);
         }
 
-        private void onBind(int value) {
-            ((TextView) itemView).setText("Item: " + value);
+        public void unbind() {
+            mItem = null;
+        }
+
+        private void onBind(boolean isBookmarked) {
+            ((TextView) itemView).setText("Item: " + isBookmarked);
         }
     }
 }

@@ -19,9 +19,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".activity.CreateActivity" />
-
-        <service android:name=".service.CreateIntentService" />
+        <service android:name=".service.AppUpdateIntentService" />
     </application>
 
 </manifest>

@@ -1,31 +1,64 @@
 package com.jpmcosta.test.realmtestproject.activity;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.View;
+import android.widget.TextView;
 
 import com.jpmcosta.test.realmtestproject.R;
 import com.jpmcosta.test.realmtestproject.adapter.ItemListAdapter;
 import com.jpmcosta.test.realmtestproject.realm.App;
 import com.jpmcosta.test.realmtestproject.realm.Item;
-
-import java.util.Random;
+import com.jpmcosta.test.realmtestproject.realm.Session;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 
 public class MainActivity extends RealmActivity {
+
+    @BindView(R.id.session)
+    protected TextView sessionTextView;
 
     @BindView(android.R.id.list)
     protected RecyclerView mRecyclerView;
 
-    @BindView(R.id.fab)
-    protected FloatingActionButton mFab;
+    private App mApp;
+
+    private Session mSession;
+
+    private RealmChangeListener<App> mAppChangeListener =
+            new RealmChangeListener<App>() {
+
+                @Override
+                public void onChange(final App app) {
+                    getRealm().executeTransaction(new Realm.Transaction() {
+
+                        @Override
+                        public void execute(Realm realm) {
+                            mSession.appVersion = app.version;
+                        }
+                    });
+                }
+            };
+
+    private RealmChangeListener<Session> mSessionChangeListener =
+            new RealmChangeListener<Session>() {
+
+                @Override
+                public void onChange(final Session session) {
+                    getRealm().executeTransaction(new Realm.Transaction() {
+
+                        @Override
+                        public void execute(Realm realm) {
+                            sessionTextView.setText("Session appVersion: " + session.appVersion);
+                        }
+                    });
+                }
+            };
+
+    private ItemListAdapter mAdapter;
 
 
     @Override
@@ -39,40 +72,31 @@ public class MainActivity extends RealmActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        setupRecyclerView();
+        setupListeners();
 
-        setupFab();
+        setupRecyclerView();
+    }
+
+    private void setupListeners() {
+        mApp = getRealm().where(App.class).findFirst();
+        mSession = getRealm().where(Session.class).findFirst();
     }
 
     private void setupRecyclerView() {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-    }
 
-    private void setupFab() {
-        mFab.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, CreateActivity.class));
-            }
-        });
-
-        mFab.setOnLongClickListener(new View.OnLongClickListener() {
+        mAdapter = new ItemListAdapter(getRealm().where(Item.class).findAll());
+        mAdapter.setOnItemClickListener(new ItemListAdapter.OnItemClickListener() {
 
             @Override
-            public boolean onLongClick(View v) {
-                final App app = getRealm().where(App.class).findFirst();
-
+            public void onItemClick(final Item item) {
                 getRealm().executeTransaction(new Realm.Transaction() {
 
                     @Override
-                    public void execute(@NonNull Realm realm) {
-                        Random random = new Random();
-                        final Item item = realm.copyToRealm(Item.create(random.nextInt()));
-                        app.items.add(item);
+                    public void execute(Realm realm) {
+                        item.isBookmarked = !item.isBookmarked;
                     }
                 });
-                return true;
             }
         });
     }
@@ -81,8 +105,8 @@ public class MainActivity extends RealmActivity {
     protected void onStart() {
         super.onStart();
 
-        App app = getRealm().where(App.class).findFirst();
-        ItemListAdapter mAdapter = new ItemListAdapter(app.items);
+        mApp.addChangeListener(mAppChangeListener);
+        mSession.addChangeListener(mSessionChangeListener);
         mRecyclerView.setAdapter(mAdapter);
     }
 
@@ -90,6 +114,8 @@ public class MainActivity extends RealmActivity {
     protected void onStop() {
         super.onStop();
 
+        mApp.removeChangeListener(mAppChangeListener);
+        mSession.removeChangeListener(mSessionChangeListener);
         mRecyclerView.setAdapter(null);
     }
 }
