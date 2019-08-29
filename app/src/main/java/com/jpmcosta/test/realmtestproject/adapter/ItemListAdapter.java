@@ -9,15 +9,22 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.jpmcosta.test.realmtestproject.R;
-import com.jpmcosta.test.realmtestproject.realm.Item;
+import com.jpmcosta.test.realmtestproject.realm.obj.Item;
 
 import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
+import static com.jpmcosta.test.realmtestproject.util.Const.NO_TIME;
+
 public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemHolder> {
 
-    public OnItemClickListener mOnItemClickListener;
+    public ItemListAdapter(RealmResults<Item> items) {
+        mItems = items;
+    }
+
+
     private RealmResults<Item> mItems;
+
     private RealmChangeListener<RealmResults<Item>> mItemsChangeListener =
             new RealmChangeListener<RealmResults<Item>>() {
 
@@ -27,10 +34,8 @@ public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemHo
                 }
             };
 
+    public OnItemClickListener mOnItemClickListener;
 
-    public ItemListAdapter(RealmResults<Item> items) {
-        mItems = items;
-    }
 
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
@@ -80,12 +85,12 @@ public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemHo
         void onItemClick(Item item);
     }
 
-    public class ItemHolder extends RecyclerView.ViewHolder {
+    class ItemHolder extends RecyclerView.ViewHolder {
 
         private Item mItem;
 
 
-        public ItemHolder(View itemView) {
+        ItemHolder(View itemView) {
             super(itemView);
 
             itemView.setOnClickListener(new View.OnClickListener() {
@@ -99,17 +104,21 @@ public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemHo
             });
         }
 
-        public void bind(Item item) {
+        void bind(Item item) {
             mItem = item;
-            onBind(item.isBookmarked);
+            final String name = item.subItem.name;
+            final boolean isBookmarked = item.isBookmarked;
+            final boolean isRemoved = item.removedAt != NO_TIME;
+            onBind(name, isBookmarked, isRemoved);
         }
 
-        public void unbind() {
+        void unbind() {
             mItem = null;
         }
 
-        private void onBind(boolean isBookmarked) {
-            ((TextView) itemView).setText("Item: " + isBookmarked);
+        private void onBind(String name, boolean isBookmarked, boolean isRemoved) {
+            final String text = name + (isBookmarked ? " - bookmarked" : "") + (isRemoved ? " - removed" : "");
+            ((TextView) itemView).setText(text);
         }
     }
 }
