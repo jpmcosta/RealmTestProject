@@ -2,7 +2,8 @@ package com.jpmcosta.test.realmtestproject.service;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.Nullable;
 
 import com.jpmcosta.test.realmtestproject.RealmTestProject;
 import com.jpmcosta.test.realmtestproject.realm.App;
