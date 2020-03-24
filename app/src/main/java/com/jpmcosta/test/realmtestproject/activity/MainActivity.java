@@ -1,46 +1,42 @@
 package com.jpmcosta.test.realmtestproject.activity;
 
 import android.os.Bundle;
-import android.os.SystemClock;
+import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.jpmcosta.test.realmtestproject.R;
+import com.jpmcosta.test.realmtestproject.RealmTestProject;
 import com.jpmcosta.test.realmtestproject.adapter.ItemListAdapter;
 import com.jpmcosta.test.realmtestproject.realm.obj.Item;
-import com.jpmcosta.test.realmtestproject.realm.obj.ItemPage;
 
-import java.util.ArrayList;
-
-import javax.annotation.Nonnull;
+import java.util.concurrent.ThreadLocalRandom;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.realm.Realm;
-import io.realm.RealmQuery;
-import io.realm.RealmResults;
+import io.realm.Sort;
 
 import static com.jpmcosta.test.realmtestproject.util.Const.NO_TIME;
 
 public class MainActivity extends RealmActivity {
 
+    private static final String TAG = MainActivity.class.getSimpleName();
+
     @BindView(android.R.id.list)
     protected RecyclerView mRecyclerView;
-
-    @BindView(R.id.result)
-    protected TextView mResultTextView;
-
-    @BindView(R.id.fab_move)
-    protected FloatingActionButton mFabMove;
 
     @BindView(R.id.fab_query)
     protected FloatingActionButton mFabQuery;
 
     private ItemListAdapter mAdapter;
+
+    private long firstCreatedAt;
+
+    private long lastCreatedAt;
 
 
     @Override
@@ -48,6 +44,10 @@ public class MainActivity extends RealmActivity {
         super.onCreate(savedInstanceState);
 
         setupContentView();
+
+        final Realm realm = getRealm();
+        firstCreatedAt = realm.where(Item.class).min("createdAt").longValue();
+        lastCreatedAt = realm.where(Item.class).max("createdAt").longValue();
     }
 
     private void setupContentView() {
@@ -55,8 +55,6 @@ public class MainActivity extends RealmActivity {
         ButterKnife.bind(this);
 
         setupRecyclerView();
-
-        setupFabMove();
 
         setupFabQuery();
     }
@@ -73,55 +71,7 @@ public class MainActivity extends RealmActivity {
 
                     @Override
                     public void execute(Realm realm) {
-                        // Do nothing.
-                    }
-                });
-            }
-        });
-    }
-
-    private void setupFabMove() {
-        mFabMove.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                final Realm realm = getRealm();
-                realm.executeTransactionAsync(new Realm.Transaction() {
-
-                    @SuppressWarnings("ConstantConditions")
-                    @Override
-                    public void execute(Realm realm) {
-                        postText(mResultTextView, "Move transaction has started");
-
-                        final Item item = realm.where(Item.class).contains("subItem.name", "A").findAll().last();
-                        if (item == null) return;
-
-                        final RealmResults<ItemPage> itemPages = item.itemPages;
-
-                        ItemPage previousItemPage = null;
-                        if (itemPages != null && !itemPages.isEmpty()) {
-                            previousItemPage = itemPages.first();
-                            for (ItemPage itemPage : itemPages) {
-                                itemPage.items.remove(item);
-                            }
-                        }
-
-                        ItemPage newItemPage = null;
-                        if (previousItemPage != null) {
-                            newItemPage = realm.where(ItemPage.class)
-                                    .equalTo("id", previousItemPage.id + 1)
-                                    .findFirst();
-                        }
-                        if (newItemPage == null) {
-                            newItemPage = realm.where(ItemPage.class).sort("id").findFirst();
-                        }
-
-                        if (newItemPage != null) {
-                            newItemPage.items.add(newItemPage.items.size() / 2, item);
-                            postText(mResultTextView, "Last Item with 'A' moved to ItemPage with id " + newItemPage.id);
-                        } else {
-                            postText(mResultTextView, "No items pages available");
-                        }
+                        item.isBookmarked = !item.isBookmarked;
                     }
                 });
             }
@@ -133,32 +83,30 @@ public class MainActivity extends RealmActivity {
 
             @Override
             public void onClick(View v) {
-                final Realm realm = getRealm();
-                realm.executeTransactionAsync(new Realm.Transaction() {
+                new Thread() {
 
                     @Override
-                    public void execute(Realm realm) {
-                        postText(mResultTextView, "Query transaction has started");
+                    public void run() {
+                        final Realm realm = Realm.getInstance(((RealmTestProject) getApplication()).realmConfiguration);
+                        try {
+                            for (int i = 0; i < 10; i++) {
+                                final long createdAt =
+                                        ThreadLocalRandom.current().nextLong(firstCreatedAt, lastCreatedAt);
+                                final Item item = realm.where(Item.class)
+                                        .equalTo("key", "A")
+                                        .equalTo("createdAt", createdAt)
+                                        .equalTo("removedAt", NO_TIME)
+                                        .sort("random", Sort.DESCENDING)
+                                        .findFirst();
+                                final long itemId = item != null ? item.id : -1L;
 
-                        final ArrayList<Long> elapsedTimes = new ArrayList<>();
-                        final RealmResults<ItemPage> itemPages = realm.where(ItemPage.class).sort("id").findAll();
-                        for (ItemPage itemPage : itemPages) {
-                            final RealmQuery<Item> query = itemPage.items.where()
-                                    .contains("subItem.name", "A")
-                                    .equalTo("removedAt", NO_TIME);
-                            final long startTime = SystemClock.elapsedRealtime();
-                            final RealmResults<Item> items = query.findAll();
-                            final long elapsedTime = SystemClock.elapsedRealtime() - startTime;
-                            elapsedTimes.add(elapsedTime);
-
-                            for (Item item : items) {
-                                item.isBookmarked = !item.isBookmarked;
+                                Log.i(TAG, "item.id = " + itemId);
                             }
+                        } finally {
+                            realm.close();
                         }
-
-                        postText(mResultTextView, "findAll (ms): " + elapsedTimes.toString());
                     }
-                });
+                }.start();
             }
         });
     }
@@ -175,15 +123,5 @@ public class MainActivity extends RealmActivity {
         super.onStop();
 
         mRecyclerView.setAdapter(null);
-    }
-
-    private void postText(@Nonnull final TextView textView, @Nonnull final String text) {
-        textView.post(new Runnable() {
-
-            @Override
-            public void run() {
-                textView.setText(text);
-            }
-        });
     }
 }

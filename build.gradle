@@ -9,7 +9,7 @@ buildscript {
         butterknife_version = '10.2.1'
 
         gradle_plugin_version = '3.6.1'
-        realm_version = '5.14.0'
+        realm_version = '6.1.0'
     }
 
     repositories {

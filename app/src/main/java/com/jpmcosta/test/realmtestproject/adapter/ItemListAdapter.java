@@ -14,17 +14,9 @@ import com.jpmcosta.test.realmtestproject.realm.obj.Item;
 import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
-import static com.jpmcosta.test.realmtestproject.util.Const.NO_TIME;
-
 public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemHolder> {
 
-    public ItemListAdapter(RealmResults<Item> items) {
-        mItems = items;
-    }
-
-
     private RealmResults<Item> mItems;
-
     private RealmChangeListener<RealmResults<Item>> mItemsChangeListener =
             new RealmChangeListener<RealmResults<Item>>() {
 
@@ -33,9 +25,11 @@ public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemHo
                     notifyDataSetChanged();
                 }
             };
+    private OnItemClickListener mOnItemClickListener;
 
-    public OnItemClickListener mOnItemClickListener;
-
+    public ItemListAdapter(RealmResults<Item> items) {
+        mItems = items;
+    }
 
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
@@ -106,18 +100,17 @@ public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemHo
 
         void bind(Item item) {
             mItem = item;
-            final String name = item.subItem.name;
+            final String name = "Item$" + item.id;
             final boolean isBookmarked = item.isBookmarked;
-            final boolean isRemoved = item.removedAt != NO_TIME;
-            onBind(name, isBookmarked, isRemoved);
+            onBind(name, isBookmarked);
         }
 
         void unbind() {
             mItem = null;
         }
 
-        private void onBind(String name, boolean isBookmarked, boolean isRemoved) {
-            final String text = name + (isBookmarked ? " - bookmarked" : "") + (isRemoved ? " - removed" : "");
+        private void onBind(String name, boolean isBookmarked) {
+            final String text = name + (isBookmarked ? " - bookmarked" : "");
             ((TextView) itemView).setText(text);
         }
     }
