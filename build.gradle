@@ -1,24 +1,14 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext {
-        androidx_appcompat_version = '1.2.0-alpha03'
-        androidx_recyclerview_version = '1.2.0-alpha01'
-        androidx_material_version = '1.2.0-alpha05'
-
-        butterknife_version = '10.2.1'
-
-        gradle_plugin_version = '3.6.1'
-        realm_version = '6.1.0'
-    }
-
     repositories {
         jcenter()
         google()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:$gradle_plugin_version"
-        classpath "io.realm:realm-gradle-plugin:$realm_version"
+        classpath "com.android.tools.build:gradle:$GRADLE_PLUGIN_VERSION"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$KOTLIN_VERSION"
+        classpath "io.realm:realm-gradle-plugin:$REALM_VERSION"
     }
 }
 

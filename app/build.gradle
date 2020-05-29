@@ -1,13 +1,15 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 apply plugin: 'realm-android'
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion '28.0.3'
+    compileSdkVersion COMPILE_SDK_VERSION as int
+    buildToolsVersion "$BUILD_TOOLS_VERSION"
     defaultConfig {
         applicationId "com.jpmcosta.test.realmtestproject"
-        minSdkVersion 21
-        targetSdkVersion 28
+        minSdkVersion MIN_SDK_VERSION as int
+        targetSdkVersion TARGET_SDK_VERSION as int
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -18,21 +20,30 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    realm {
+        kotlinExtensionsEnabled = false
+    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$KOTLIN_VERSION"
+
+    implementation "androidx.appcompat:appcompat:$ANDROIDX_APPCOMPAT_VERSION"
+    implementation "androidx.recyclerview:recyclerview:$ANDROIDX_RECYCLERVIEW_VERSION"
+    implementation "com.google.android.material:material:$MATERIAL_COMPONENTS_VERSION"
+
+    // Butter Knife.
+    implementation "com.jakewharton:butterknife:$BUTTERKNIFE_VERSION"
+    kapt "com.jakewharton:butterknife-compiler:$BUTTERKNIFE_VERSION"
+
+    // Testing.
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     testImplementation 'junit:junit:4.12'
+}
 
-
-    implementation "androidx.appcompat:appcompat:$androidx_appcompat_version"
-    implementation "androidx.recyclerview:recyclerview:$androidx_recyclerview_version"
-    implementation "com.google.android.material:material:$androidx_material_version"
-
-    // Butter Knife.
-    implementation "com.jakewharton:butterknife:$butterknife_version"
-    annotationProcessor "com.jakewharton:butterknife-compiler:$butterknife_version"
+repositories {
+    mavenCentral()
 }
