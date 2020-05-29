@@ -17,7 +17,6 @@ class RealmTestProject : Application() {
 
         realmConfiguration = RealmConfiguration.Builder()
                 .initialData(InitialData())
-                .deleteRealmIfMigrationNeeded()
                 .build()
     }
 }

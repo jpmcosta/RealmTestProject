@@ -1,25 +1,61 @@
 package com.jpmcosta.test.realmtestproject.activity
 
 import android.app.Activity
-import android.os.Bundle
+import androidx.annotation.CallSuper
 import com.jpmcosta.test.realmtestproject.RealmTestProject
 import io.realm.Realm
+import io.realm.RealmAsyncTask
 
 abstract class RealmActivity : Activity() {
 
-    lateinit var realm: Realm
-        private set
+    private var realmAsyncTask: RealmAsyncTask? = null
 
+    private val realmCallback = object : Realm.Callback() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        realm = Realm.getInstance((application as RealmTestProject).realmConfiguration)
+        override fun onSuccess(realm: Realm) {
+            this@RealmActivity.realm = realm
+        }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    var realm: Realm? = null
+        private set(realm) {
+            realmAsyncTask?.cancel()
 
-        realm.close()
+            val previousRealm = field
+            if (previousRealm != realm) {
+                if (previousRealm != null) {
+                    onStopRealm()
+                    previousRealm.close()
+                }
+                field = realm
+                if (realm != null) {
+                    onStartRealm(realm)
+                } else {
+                    onStopRealm()
+                }
+            }
+        }
+
+
+    override fun onStart() {
+        super.onStart()
+
+        realmAsyncTask = Realm.getInstanceAsync((application as RealmTestProject).realmConfiguration, realmCallback)
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        realm = null
+    }
+
+    @CallSuper
+    open fun onStartRealm(realm: Realm) {
+        // Sub-classes may override.
+    }
+
+    @CallSuper
+    open fun onStopRealm() {
+        // Sub-classes may override.
     }
 }
