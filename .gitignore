@@ -38,17 +38,14 @@ projectFilesBackup/
 
 # Custom
 .idea/caches
-.idea/libraries
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/.name
-.idea/compiler.xml
 .idea/copyright/profiles_settings.xml
+.idea/libraries
+.idea/compiler.xml
 .idea/encodings.xml
-.idea/inspectionProfiles
+.idea/jarRepositories.xml
 .idea/misc.xml
 .idea/modules.xml
-.idea/scopes/scope_settings.xml
 .idea/vcs.xml
+.idea/workspace.xml
 *.iml
 .DS_Store
