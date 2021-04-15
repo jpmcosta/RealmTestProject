@@ -1,26 +1,23 @@
 package com.jpmcosta.test.realmtestproject.activity
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import butterknife.BindView
-import butterknife.ButterKnife
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.jpmcosta.test.realmtestproject.R
-import com.jpmcosta.test.realmtestproject.adapter.FeedAdapter
-import com.jpmcosta.test.realmtestproject.realm.obj.Feed
+import com.jpmcosta.test.realmtestproject.adapter.*
+import com.jpmcosta.test.realmtestproject.databinding.ActivityMainBinding
+import com.jpmcosta.test.realmtestproject.realm.obj.*
 import io.realm.Realm
 
 class MainActivity : RealmActivity() {
 
-    @BindView(R.id.fab)
-    lateinit var fab: FloatingActionButton
+    lateinit var binding: ActivityMainBinding
 
-    @BindView(android.R.id.list)
-    lateinit var recyclerView: RecyclerView
+    private val fab: FloatingActionButton get() = binding.fab
 
-    private var feedAdapter = FeedAdapter()
+    private val recyclerView: RecyclerView get() = binding.list
+
+    private val adapterSelector = AdapterSelector()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,8 +27,8 @@ class MainActivity : RealmActivity() {
     }
 
     private fun setupContentView() {
-        setContentView(R.layout.activity_main)
-        ButterKnife.bind(this)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         setupFab()
 
@@ -40,36 +37,62 @@ class MainActivity : RealmActivity() {
 
     private fun setupFab() {
         fab.setOnClickListener {
-            Toast.makeText(this, "Hello, World!", Toast.LENGTH_SHORT).show()
+            val realm = realm ?: return@setOnClickListener
+
+            recyclerView.adapter = adapterSelector.next(realm)
         }
     }
 
     private fun setupRecyclerView() {
         recyclerView.layoutManager = LinearLayoutManager(this)
-    }
-
-    override fun onStart() {
-        super.onStart()
-
-        recyclerView.adapter = feedAdapter
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        feedAdapter.feed = null
-        recyclerView.adapter = null
+        recyclerView.adapter = adapterSelector.currentAdapter
     }
 
     override fun onStartRealm(realm: Realm) {
         super.onStartRealm(realm)
 
-        feedAdapter.feed = realm.where(Feed::class.java).findFirst()
+        adapterSelector.fill(realm)
     }
 
     override fun onStopRealm() {
         super.onStopRealm()
 
-        feedAdapter.feed = null
+        adapterSelector.clear()
+    }
+
+
+    private class AdapterSelector {
+
+        private var adapters: Array<ResultsListAdapter<*>> = arrayOf(FeedResultsAdapter(), GroupResultsAdapter(),
+            ItemResultsAdapter(), SubItemResultsAdapter(), LabelResultsAdapter())
+
+        private var index: Int = 0
+
+        val currentAdapter: ResultsListAdapter<*> get() = adapters[index]
+
+
+        fun fill(realm: Realm) {
+            when (val current = currentAdapter) {
+                is FeedResultsAdapter -> current.results = realm.where(Feed::class.java).findAllAsync()
+                is GroupResultsAdapter -> current.results = realm.where(Group::class.java).findAllAsync()
+                is ItemResultsAdapter -> current.results = realm.where(Item::class.java).findAllAsync()
+                is SubItemResultsAdapter -> current.results = realm.where(SubItem::class.java).findAllAsync()
+                is LabelResultsAdapter -> current.results = realm.where(Label::class.java).findAllAsync()
+            }
+        }
+
+        fun clear() {
+            currentAdapter.clearResults()
+        }
+
+        fun next(realm: Realm): ResultsListAdapter<*> {
+            clear()
+            if (adapters.size <= ++index) {
+                index = 0
+            }
+            fill(realm)
+
+            return currentAdapter
+        }
     }
 }

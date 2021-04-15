@@ -2,24 +2,21 @@ package com.jpmcosta.test.realmtestproject.realm.obj
 
 import io.realm.RealmList
 import io.realm.RealmObject
+import io.realm.annotations.Index
 import io.realm.annotations.PrimaryKey
 
 open class Feed : RealmObject() {
 
-    companion object {
-
-        @JvmStatic
-        fun create(id: Long, groups: RealmList<Group>? = null): Feed {
-            val feed = Feed()
-            feed.id = id
-            feed.groups = groups ?: RealmList()
-            return feed
-        }
-    }
-
-
     @PrimaryKey
     open var id: Long = 0
 
-    open lateinit var groups: RealmList<Group>
+    @Index
+    open var seqNum: Long = Long.MAX_VALUE
+
+    @Index
+    open var type: Int = 0
+
+    open var groups: RealmList<Group>? = null
+
+    open var items: RealmList<Item>? = null
 }

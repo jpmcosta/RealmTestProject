@@ -1,14 +1,25 @@
 package com.jpmcosta.test.realmtestproject.activity
 
 import android.app.Activity
+import android.os.SystemClock
+import android.util.Log
+import android.widget.Toast
 import androidx.annotation.CallSuper
+import com.jpmcosta.test.realmtestproject.R
 import com.jpmcosta.test.realmtestproject.RealmTestProject
 import io.realm.Realm
 import io.realm.RealmAsyncTask
 
 abstract class RealmActivity : Activity() {
 
+    companion object {
+
+        private val LOG_TAG = RealmActivity::class.java.simpleName
+    }
+
     private var realmAsyncTask: RealmAsyncTask? = null
+
+    private var realmStartTime: Long = 0L
 
     private val realmCallback = object : Realm.Callback() {
 
@@ -40,6 +51,7 @@ abstract class RealmActivity : Activity() {
     override fun onStart() {
         super.onStart()
 
+        realmStartTime = SystemClock.elapsedRealtime()
         realmAsyncTask = Realm.getInstanceAsync((application as RealmTestProject).realmConfiguration, realmCallback)
     }
 
@@ -51,7 +63,10 @@ abstract class RealmActivity : Activity() {
 
     @CallSuper
     open fun onStartRealm(realm: Realm) {
-        // Sub-classes may override.
+        val startupTimeSeconds = (SystemClock.elapsedRealtime() - realmStartTime) / 1000f
+        val startupTimeText = getString(R.string.realm_startup_time_seconds, startupTimeSeconds)
+        Log.i(LOG_TAG, startupTimeText)
+        Toast.makeText(this, startupTimeText, Toast.LENGTH_LONG).show()
     }
 
     @CallSuper

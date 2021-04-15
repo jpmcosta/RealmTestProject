@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">RealmTestProject</string>
+
+    <string name="realm_startup_time_seconds">Realm startup time: %f seconds</string>
 </resources>

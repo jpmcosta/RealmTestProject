@@ -6,6 +6,16 @@ apply plugin: 'realm-android'
 android {
     compileSdkVersion COMPILE_SDK_VERSION as int
     buildToolsVersion "$BUILD_TOOLS_VERSION"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
     defaultConfig {
         applicationId "com.jpmcosta.test.realmtestproject"
         minSdkVersion MIN_SDK_VERSION as int
@@ -14,12 +24,18 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
+    buildFeatures {
+        viewBinding true
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     realm {
         kotlinExtensionsEnabled = false
     }
@@ -32,10 +48,6 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$ANDROIDX_APPCOMPAT_VERSION"
     implementation "androidx.recyclerview:recyclerview:$ANDROIDX_RECYCLERVIEW_VERSION"
     implementation "com.google.android.material:material:$MATERIAL_COMPONENTS_VERSION"
-
-    // Butter Knife.
-    implementation "com.jakewharton:butterknife:$BUTTERKNIFE_VERSION"
-    kapt "com.jakewharton:butterknife-compiler:$BUTTERKNIFE_VERSION"
 
     // Testing.
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {

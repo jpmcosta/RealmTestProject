@@ -1,7 +1,6 @@
 package com.jpmcosta.test.realmtestproject
 
 import android.app.Application
-import com.jpmcosta.test.realmtestproject.realm.InitialData
 import io.realm.Realm
 import io.realm.RealmConfiguration
 
@@ -15,8 +14,6 @@ class RealmTestProject : Application() {
 
         Realm.init(this)
 
-        realmConfiguration = RealmConfiguration.Builder()
-                .initialData(InitialData())
-                .build()
+        realmConfiguration = RealmConfiguration.Builder().build()
     }
 }
