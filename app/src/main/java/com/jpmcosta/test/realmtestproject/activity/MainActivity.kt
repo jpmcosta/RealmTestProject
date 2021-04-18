@@ -1,13 +1,17 @@
 package com.jpmcosta.test.realmtestproject.activity
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.jpmcosta.test.realmtestproject.adapter.*
+import com.jpmcosta.test.realmtestproject.R
+import com.jpmcosta.test.realmtestproject.adapter.ItemResultsAdapter
 import com.jpmcosta.test.realmtestproject.databinding.ActivityMainBinding
-import com.jpmcosta.test.realmtestproject.realm.obj.*
+import com.jpmcosta.test.realmtestproject.realm.obj.Item
 import io.realm.Realm
+import io.realm.Sort
+
 
 class MainActivity : RealmActivity() {
 
@@ -17,7 +21,7 @@ class MainActivity : RealmActivity() {
 
     private val recyclerView: RecyclerView get() = binding.list
 
-    private val adapterSelector = AdapterSelector()
+    private val itemResultsAdapter = ItemResultsAdapter()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,60 +43,33 @@ class MainActivity : RealmActivity() {
         fab.setOnClickListener {
             val realm = realm ?: return@setOnClickListener
 
-            recyclerView.adapter = adapterSelector.next(realm)
+            createItem(realm)
         }
     }
 
     private fun setupRecyclerView() {
         recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = adapterSelector.currentAdapter
+        recyclerView.adapter = itemResultsAdapter
     }
 
     override fun onStartRealm(realm: Realm) {
         super.onStartRealm(realm)
 
-        adapterSelector.fill(realm)
+        val text = getString(R.string.realm_started, realm.toString())
+        Toast.makeText(this, text, Toast.LENGTH_LONG).show()
+
+        updateItems(realm)
     }
 
-    override fun onStopRealm() {
-        super.onStopRealm()
-
-        adapterSelector.clear()
+    private fun updateItems(realm: Realm) {
+        val items = realm.where(Item::class.java).sort("id", Sort.DESCENDING).findAllAsync()
+        itemResultsAdapter.updateResults(results = items)
     }
 
-
-    private class AdapterSelector {
-
-        private var adapters: Array<ResultsListAdapter<*>> = arrayOf(FeedResultsAdapter(), GroupResultsAdapter(),
-            ItemResultsAdapter(), SubItemResultsAdapter(), LabelResultsAdapter())
-
-        private var index: Int = 0
-
-        val currentAdapter: ResultsListAdapter<*> get() = adapters[index]
-
-
-        fun fill(realm: Realm) {
-            when (val current = currentAdapter) {
-                is FeedResultsAdapter -> current.results = realm.where(Feed::class.java).findAllAsync()
-                is GroupResultsAdapter -> current.results = realm.where(Group::class.java).findAllAsync()
-                is ItemResultsAdapter -> current.results = realm.where(Item::class.java).findAllAsync()
-                is SubItemResultsAdapter -> current.results = realm.where(SubItem::class.java).findAllAsync()
-                is LabelResultsAdapter -> current.results = realm.where(Label::class.java).findAllAsync()
-            }
-        }
-
-        fun clear() {
-            currentAdapter.clearResults()
-        }
-
-        fun next(realm: Realm): ResultsListAdapter<*> {
-            clear()
-            if (adapters.size <= ++index) {
-                index = 0
-            }
-            fill(realm)
-
-            return currentAdapter
+    private fun createItem(realm: Realm) {
+        realm.executeTransactionAsync { realm ->
+            val itemId = (realm.where(Item::class.java).max("id")?.toLong() ?: -1L) + 1
+            realm.insert(Item().apply { id = itemId })
         }
     }
 }

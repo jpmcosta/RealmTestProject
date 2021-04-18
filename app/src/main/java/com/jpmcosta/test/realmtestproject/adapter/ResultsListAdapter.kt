@@ -12,20 +12,24 @@ import io.realm.RealmResults
 
 abstract class ResultsListAdapter<T : RealmObject> : RecyclerView.Adapter<ResultsListAdapter<T>.ObjHolder>() {
 
-    private val listener = RealmChangeListener<RealmResults<T>> {
-        notifyDataSetChanged()
+    private val listener = RealmChangeListener<RealmResults<T>> { results ->
+        this.results = results
     }
 
-    open var results: RealmResults<T>? = null
+    private var results: RealmResults<T>? = null
         set(results) {
-            field?.removeChangeListener(listener)
             field = results
             notifyDataSetChanged()
-            results?.addChangeListener(listener)
         }
 
     private var onObjClickListener: OnObjClickListener<T>? = null
 
+
+    fun updateResults(results: RealmResults<T>?) {
+        this.results?.removeChangeListener(listener)
+        this.results = if (results?.isLoaded == true) results else null
+        results?.addChangeListener(listener)
+    }
 
     fun clearResults() {
         results = null
